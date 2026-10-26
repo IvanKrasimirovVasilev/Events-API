@@ -10,3 +10,23 @@ def test_health_endpoint_returns_healthy(base_url):
 
     # Check that the API reports a healthy status
     assert response.json()["status"] == "healthy"
+
+
+def test_user_registration(base_url, user, password):
+    # Arrange
+    data = {
+        "username": user.username,
+        "password": password
+    }
+
+    # Act
+    response = requests.post(
+        f"{base_url}/api/auth/register",
+        json=data,
+        timeout=5
+    )
+
+    # Assert
+    assert response.status_code == 201
+    assert response.json()["message"] == "User created successfully"
+    assert response.json()["user"]["username"] == user.username

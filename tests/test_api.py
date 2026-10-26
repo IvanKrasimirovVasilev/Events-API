@@ -70,7 +70,45 @@ def test_create_event(base_url, auth_token, event_data):
         f"Actual status: {response.status_code}\n"
         f"API response: {response.text}"
     )
+    # Check that the event title, description, location matches the submitted title, description, location
     assert response.json()["title"] == event_data["title"]
     assert response.json()["description"] == event_data["description"]
     assert response.json()["location"] == event_data["location"]
 
+def test_rsvp_event(base_url, auth_token, event_data):
+    # Arrange: Prepare authentication
+    headers = {
+        "Authorization": f"Bearer {auth_token}"
+    }
+
+    event_response = requests.post(
+        f"{base_url}/api/events",
+        json=event_data,
+        headers=headers,
+        timeout=5
+    )
+
+    # Get the ID of the created event
+    event_id = event_response.json()["id"]
+
+    # Create RSVP to the created event
+    response = requests.post(
+        f"{base_url}/api/rsvps/event/{event_id}",
+        json={"attending": True},
+        headers=headers,
+        timeout=5
+    )
+
+    # Assert: Check successful RSVP creation
+    assert response.status_code == 201, (
+        f"RSVP creation failed!\n"
+        f"Expected status: 201 (Created)\n"
+        f"Actual status: {response.status_code}\n"
+        f"API response: {response.text}"
+    )
+
+    # Check that the RSVP belongs to the correct event
+    assert response.json()["event_id"] == event_id
+
+    # Check that the user is attending the event
+    assert response.json()["attending"] is True

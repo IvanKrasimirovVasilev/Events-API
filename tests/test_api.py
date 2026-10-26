@@ -136,3 +136,25 @@ def test_duplicate_registration(base_url, registered_user):
 
     # Check that the API returns the correct error message
     assert response.json()["error"] == "Username already exists"
+
+def test_create_event_without_authentication(base_url, event_data):
+    # Arrange: Set the expected HTTP status
+    expected_status = 401
+
+    # Act: Try to create an event without authentication
+    response = requests.post(
+        f"{base_url}/api/events",
+        json=event_data,
+        timeout=5
+    )
+
+    # Assert: Check that the request is rejected
+    assert response.status_code == expected_status, (
+        f"Unauthorized event creation test failed!\n"
+        f"Expected status: {expected_status}\n"
+        f"Actual status: {response.status_code}\n"
+        f"API response: {response.text}"
+    )
+
+    # Check the API error message
+    assert response.json()["msg"] == "Missing Authorization Header"

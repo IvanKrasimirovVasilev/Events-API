@@ -1,6 +1,5 @@
 import requests
 
-
 def test_health_endpoint_returns_healthy(base_url):
     # Send a GET request to the health endpoint
     response = requests.get(f"{base_url}/api/health", timeout=5)
@@ -12,12 +11,9 @@ def test_health_endpoint_returns_healthy(base_url):
     assert response.json()["status"] == "healthy"
 
 
-def test_user_registration(base_url, user, password):
+def test_user_registration(base_url, registration_user):
     # Arrange
-    data = {
-        "username": user.username,
-        "password": password
-    }
+    data = registration_user
 
     # Act
     response = requests.post(
@@ -29,4 +25,4 @@ def test_user_registration(base_url, user, password):
     # Assert
     assert response.status_code == 201
     assert response.json()["message"] == "User created successfully"
-    assert response.json()["user"]["username"] == user.username
+    assert response.json()["user"]["username"] == data["username"]

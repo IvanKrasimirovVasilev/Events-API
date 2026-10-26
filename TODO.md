@@ -7,5 +7,6 @@ Ideas and improvements for future development.
 
 ## Tests
 - check that empty passwords are rejected
+- Refactor integration tests after completing Docker setup 
 
 

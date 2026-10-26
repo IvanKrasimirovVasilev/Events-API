@@ -1,5 +1,6 @@
 import pytest
 from models import User
+import uuid
 
 
 @pytest.fixture
@@ -16,3 +17,11 @@ def user():
 def password():
     # Return a test password
     return "MySecurePassword123"
+
+@pytest.fixture
+def registration_user():
+    # Generate a unique username for each test
+    return {
+        "username": f"testuser_{uuid.uuid4().hex[:8]}",
+        "password": "MySecurePassword123"
+    }

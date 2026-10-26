@@ -1,10 +1,7 @@
 from models import User
 
 
-def test_user_password_hashing_behaves_correctly():
-    # Arrange
-    user = User(username="testuser")
-    password = "MySecurePassword123"
+def test_user_password_hashing_behaves_correctly(user, password):
 
     # Act
     user.set_password(password)

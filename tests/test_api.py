@@ -117,6 +117,7 @@ def test_rsvp_event(base_url, auth_token, event_data):
 def test_duplicate_registration(base_url, registered_user):
     # Arrange: Use the credentials of an already registered user
     data = registered_user
+    expected_status = 400
 
     # Act: Try to register the same user again
     response = requests.post(
@@ -126,9 +127,9 @@ def test_duplicate_registration(base_url, registered_user):
     )
 
     # Assert: Check that duplicate registration is rejected
-    assert response.status_code == 400, (
+    assert response.status_code == expected_status, (
         f"Duplicate registration test failed!\n"
-        f"Expected status: 400 (Bad Request)\n"
+        f"Expected status: {expected_status}\n"
         f"Actual status: {response.status_code}\n"
         f"API response: {response.text}"
     )

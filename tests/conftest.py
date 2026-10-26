@@ -41,3 +41,29 @@ def registered_user(base_url, registration_user):
 
     # Return the registered user's credentials
     return registration_user
+
+@pytest.fixture
+def auth_token(base_url, registered_user):
+    # Log in with the registered user
+    response = requests.post(
+        f"{base_url}/api/auth/login",
+        json=registered_user,
+        timeout=5
+    )
+
+    # Verify successful login
+    assert response.status_code == 200
+
+    # Return the JWT access token
+    return response.json()["access_token"]
+
+@pytest.fixture
+def event_data():
+    return {
+        "title": "Python Workshop",
+        "description": "Learning Python and Flask",
+        "date": "2026-12-15T18:00:00",
+        "location": "Düsseldorf",
+        "capacity": 20,
+        "is_public": True
+    }

@@ -48,3 +48,24 @@ def test_user_login(base_url, registered_user):
 
     # Check that the correct user is logged in
     assert response.json()["user"]["username"] == data["username"]
+
+
+def test_create_event(base_url, auth_token, event_data):
+    headers = {
+        "Authorization": f"Bearer {auth_token}"
+    }
+
+    # Act:
+    response = requests.post(
+        f"{base_url}/api/events",
+        json=event_data,
+        headers=headers,
+        timeout=5
+    )
+
+    # Assert: Check successful login
+    assert response.status_code == 201
+    assert response.json()["title"] == event_data["title"]
+    assert response.json()["description"] == event_data["description"]
+    assert response.json()["location"] == event_data["location"]
+

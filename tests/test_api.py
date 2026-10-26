@@ -64,7 +64,12 @@ def test_create_event(base_url, auth_token, event_data):
     )
 
     # Assert: Check successful login
-    assert response.status_code == 201
+    assert response.status_code == 201, (
+        f"Event creation failed!\n"
+        f"Expected status: 201 (Created)\n"
+        f"Actual status: {response.status_code}\n"
+        f"API response: {response.text}"
+    )
     assert response.json()["title"] == event_data["title"]
     assert response.json()["description"] == event_data["description"]
     assert response.json()["location"] == event_data["location"]

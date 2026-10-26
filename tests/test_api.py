@@ -27,20 +27,14 @@ def test_user_registration(base_url, registration_user):
     assert response.json()["message"] == "User created successfully"
     assert response.json()["user"]["username"] == data["username"]
 
-def test_user_login(base_url, registration_user):
-    # Arrange: Register a new user
-    register_response = requests.post(
-        f"{base_url}/api/auth/register",
-        json=registration_user,
-        timeout=5
-    )
-
-    assert register_response.status_code == 201
+def test_user_login(base_url, registered_user):
+    # Arrange
+    data = registered_user
 
     # Act: Log in with the registered user
     response = requests.post(
         f"{base_url}/api/auth/login",
-        json=registration_user,
+        json=data,
         timeout=5
     )
 
@@ -53,4 +47,4 @@ def test_user_login(base_url, registration_user):
     assert response.json()["access_token"]
 
     # Check that the correct user is logged in
-    assert response.json()["user"]["username"] == registration_user["username"]
+    assert response.json()["user"]["username"] == data["username"]

@@ -158,3 +158,47 @@ def test_create_event_without_authentication(base_url, event_data):
 
     # Check the API error message
     assert response.json()["msg"] == "Missing Authorization Header"
+
+
+def test_private_rsvp_without_authentication(base_url, auth_token, event_data):
+    # Arrange: Set the expected HTTP status
+    expected_status = 401
+
+    # Prepare private event data
+    private_event_data = event_data.copy()
+    private_event_data["is_public"] = False
+
+    # Create a private event with authentication
+    headers = {
+        "Authorization": f"Bearer {auth_token}"
+    }
+
+    event_response = requests.post(
+        f"{base_url}/api/events",
+        json=private_event_data,
+        headers=headers,
+        timeout=5
+    )
+
+    # Verify that the private event was created
+    assert event_response.status_code == 201, event_response.text
+
+    event_id = event_response.json()["id"]
+
+    # Act: Try to RSVP without authentication
+    response = requests.post(
+        f"{base_url}/api/rsvps/event/{event_id}",
+        json={"attending": True},
+        timeout=5
+    )
+
+    # Assert: Check that unauthorized RSVP is rejected
+    assert response.status_code == expected_status, (
+        f"Unauthorized private RSVP test failed!\n"
+        f"Expected status: {expected_status}\n"
+        f"Actual status: {response.status_code}\n"
+        f"API response: {response.text}"
+    )
+
+    # Verify the error message
+    assert response.json()["error"] == "Authentication required for this event"

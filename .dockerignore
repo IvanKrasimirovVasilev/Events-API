@@ -1,0 +1,23 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Database
+instance/
+*.db
+*.sqlite*
+
+# Git
+.git/
+.gitignore
+
+# Development
+.idea/
+tests/
+TODO.md
+
+# Secrets
+.env
+.env.*

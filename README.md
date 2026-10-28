@@ -40,8 +40,82 @@ pip install -r requirements.txt
 ```bash
 python app.py
 ```
-
 The API will be available at `http://localhost:5000`
+
+## Running with Docker
+
+Build the Docker image:
+
+```bash
+docker build -t events-api .
+```
+
+Start the container:
+
+```bash
+docker run -d -p 5000:5000 --name events-api-container events-api
+```
+
+The API is available at `http://localhost:5000`.
+
+Swagger UI: `http://localhost:5000/apidocs`
+
+Verify the API:
+
+```bash
+curl http://localhost:5000/api/health
+```
+
+Run the automated tests while the container is running:
+
+```bash
+python -m pytest tests/ -v
+```
+
+**Test result:** 9 tests passed.
+
+### Container Management
+
+```bash
+docker ps                          # List running containers
+docker logs events-api-container   # View logs
+docker stop events-api-container   # Stop container
+docker start events-api-container  # Start existing container
+docker rm events-api-container     # Remove stopped container
+```
+
+**Note:** SQLite data is stored inside the container and will be lost when the container is removed. This Docker setup is intended for development and testing.
+
+## Automated Tests
+
+The project uses **Pytest** for unit and integration testing.
+
+Run all tests:
+
+```bash
+python -m pytest tests/ -v
+```
+
+### Unit Tests
+
+- **Password Hashing** — Verifies that user passwords are securely hashed and can be validated.
+
+### Integration Tests
+
+- **Health Check** — Verifies that the API returns a healthy status.
+- **User Registration** — Tests successful user registration.
+- **User Login** — Tests authentication and JWT token generation.
+- **Event Creation** — Tests creating an event with authentication.
+- **Event RSVP** — Tests the RSVP functionality.
+- **Duplicate Registration** — Verifies that duplicate usernames are rejected.
+- **Unauthorized Event Creation** — Ensures unauthenticated users cannot create events.
+- **Unauthorized Private RSVP** — Ensures unauthenticated users cannot RSVP to protected events.
+
+**Current status:** 9 tests passing (1 unit test, 8 integration tests).
+
+### Maintaining Test Documentation
+
+**Important:** Whenever a new test is added, modified, or removed, please update this README to keep the test descriptions and total test count accurate.
 
 ## Swagger UI Documentation
 

@@ -4,21 +4,31 @@ Ideas and improvements for future development.
 
 ## App
 - No empty passwords in User.set_password()
+- Remove automatic admin privileges for the first registered user.
+- Implement secure admin account creation.
+- Add an authenticated password change endpoint.
 
 ## Tests
 - check that empty passwords are rejected
 - Refactor integration tests after completing Docker setup 
+- Improve integration tests by using an isolated test database.
 
 ## Docker — Future Improvements
 
-- Disable Flask debug mode in production.
 - Use Gunicorn or another production-ready WSGI server.
-- Configure `SECRET_KEY` and `JWT_SECRET_KEY` through environment variables.
-- Add Docker volumes for persistent SQLite storage.
-- Consider PostgreSQL instead of SQLite for production.
+- Consider Docker volumes for persistent SQLite storage in local development.
 - Add a Docker health check.
 - Run the application as a non-root user inside the container.
 - Add Docker Compose for easier configuration and startup.
-- Automate Docker image builds and tests with GitHub Actions.
-- Improve integration tests by using an isolated test database.
 
+
+## Future Improvement: Persistent Database (PostgreSQL)
+
+Currently, the Events API uses SQLite with Render's ephemeral filesystem. Database records may be lost after deployments or service restarts.
+
+**Planned improvements:**
+- Replace SQLite with PostgreSQL for production.
+- Configure the database connection using `DATABASE_URL`.
+- Keep SQLite for local development and automated tests.
+- Ensure users, events, and RSVPs persist across deployments.
+- Test database persistence after redeploying the application.

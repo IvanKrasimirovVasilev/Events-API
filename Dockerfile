@@ -4,6 +4,10 @@ FROM python:3.12-slim
 # Set the working directory
 WORKDIR /app
 
+# Build version provided by GitHub Actions
+ARG GIT_SHA=unknown
+ENV GIT_SHA=${GIT_SHA}
+
 # Copy dependency definitions
 COPY requirements.txt .
 

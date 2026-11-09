@@ -78,11 +78,14 @@ def create_app():
     # Health check endpoint
     @app.route('/api/health', methods=['GET'])
     def health():
-        return jsonify({'status': 'healthy'}), 200
+        return jsonify({
+            'status': 'healthy',
+            'version': os.environ.get('GIT_SHA', 'unknown')
+        }), 200
     
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)
 

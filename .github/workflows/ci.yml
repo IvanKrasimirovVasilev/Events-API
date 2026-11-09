@@ -53,3 +53,74 @@ jobs:
         run: |
           docker stop events-api-ci || true
           docker rm events-api-ci || true
+          
+
+  deploy:
+    name: Deploy to Render
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg GIT_SHA=${{ github.sha }} \
+            -t vasilevivan/events-api:latest .
+
+      - name: Push Docker image
+        run: docker push vasilevivan/events-api:latest
+
+      - name: Trigger Render deployment
+        run: curl --fail --show-error --silent --request POST "$RENDER_DEPLOY_HOOK"
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+
+      - name: Smoke test Render deployment
+        env:
+          RENDER_BASE_URL: ${{ vars.RENDER_BASE_URL }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          echo "Waiting for Render to deploy commit $EXPECTED_SHA"
+
+          for i in {1..60}; do
+            RESPONSE=$(curl --silent --show-error \
+              --max-time 10 \
+              "$RENDER_BASE_URL/api/health" || true)
+
+            echo "Attempt $i: $RESPONSE"
+
+            if echo "$RESPONSE" | python -c '
+          import json
+          import os
+          import sys
+
+          try:
+              data = json.load(sys.stdin)
+              valid = (
+                  data.get("status") == "healthy"
+                  and data.get("version") == os.environ["EXPECTED_SHA"]
+              )
+              sys.exit(0 if valid else 1)
+          except (ValueError, AttributeError):
+              sys.exit(1)
+          '; then
+              echo "Smoke test passed! Correct version is live."
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "Smoke test failed: expected version not deployed."
+          exit 1

@@ -192,6 +192,68 @@ For protected endpoints, include the JWT token in the Authorization header:
 Authorization: Bearer <your_jwt_token>
 ```
 
+## Production Deployment & CI/CD
+The Events API is deployed as a Docker container on Render. GitHub Actions runs automated tests and deploys changes from the main branch after the tests pass.
+
+## Live services
+Resource	URL
+Production API	https://events-api-ivan.onrender.com
+Health check	https://events-api-ivan.onrender.com/api/health
+Swagger UI	https://events-api-ivan.onrender.com/apidocs/
+OpenAPI specification	https://events-api-ivan.onrender.com/api/openapi.yaml
+Docker Hub image	https://hub.docker.com/r/vasilevivan/events-api
+GitHub Actions	https://github.com/IvanKrasimirovVasilev/Events-API/actions
+
+### Deployment infrastructure
+- Container registry: Docker Hub (vasilevivan/events-api:latest)
+- Hosting: Render Web Service (events-api-ivan), Frankfurt region, Free instance
+- Container port: 5000; the Flask app binds to 0.0.0.0
+- Database: SQLite by default (suitable for this educational demo, not durable production storage)
+- Workflow: .github/workflows/ci.yml
+- GitHub Environment: production, restricted to deployments from main
+
+### GitHub Environment configuration
+Configure the following under Repository Settings → Environments → production:
+Name	Type	Purpose
+DOCKERHUB_USERNAME	Secret	Docker Hub account used to publish the image
+DOCKERHUB_TOKEN	Secret	Docker Hub personal access token with image push permission
+RENDER_DEPLOY_HOOK	Secret	Private Render URL used to trigger a deployment
+RENDER_BASE_URL	Variable	https://events-api-ivan.onrender.com, used by the smoke test
+
+On the Render service, configure SECRET_KEY and JWT_SECRET_KEY as environment variables with strong, independent values. The application reads them from the environment through config.py. Never commit actual secret values or the Render deploy hook URL to Git.
+
+### Automated deployment workflow
+A push to main triggers the following pipeline:
+1. Build and test: GitHub Actions builds the Docker image, starts the API container, checks /api/health, runs the pytest suite, and cleans up the test container.
+2. Publish: If tests pass, the deploy job logs in to Docker Hub, builds vasilevivan/events-api:latest with the current Git commit SHA, and pushes it.
+3. Deploy: GitHub Actions calls the private Render deploy hook to deploy the updated image.
+4. Smoke test: The workflow repeatedly requests the production /api/health endpoint until the service reports healthy and its version matches the commit SHA being deployed. This prevents an older healthy container from being mistaken for the new release.
+The deploy job runs only for pushes to main, not for pull requests. A failed test prevents deployment.
+
+### Version-aware health check
+The Dockerfile accepts a build argument called GIT_SHA and exposes it to the app as an environment variable. The health endpoint returns it as version:
+{
+  "status": "healthy",
+  "version": "8233fa3038175d512b33adc709a75e0505457c18"
+}
+This example is from the first successful automated deployment (GitHub Actions run #8, November 9, 2026). The version changes with subsequent deployments. A local image built without --build-arg GIT_SHA=... reports "version": "unknown".
+
+To check the live service manually:
+curl https://events-api-ivan.onrender.com/api/health
+
+### Manual Docker image build and push
+For troubleshooting or manual publishing (requires Docker Hub authentication):
+docker build -t vasilevivan/events-api:latest .
+docker push vasilevivan/events-api:latest
+A manual push alone does not necessarily redeploy the Render service; use the Render dashboard to initiate a new deployment if needed. The normal release path is the GitHub Actions pipeline.
+
+### Operational limitations
+- Render Free instances may spin down when idle. The first request after inactivity can take extra time.
+- SQLite is not persistent on Render's ephemeral filesystem. Redeployments or instance replacement may erase registered users, events, and RSVPs. Use a managed persistent database (for example PostgreSQL) for a real production service.
+- The current container starts Flask's development server. It is acceptable for this learning exercise but should be replaced with a production WSGI server such as Gunicorn before operating a real public service.
+- The first registered user becomes an admin. This demo behavior is not suitable for an unrestricted real-world deployment.
+- Docker Hub access tokens can expire and may need rotation in GitHub Environment secrets.
+
 ## Security Notes
 
 This is a basic implementation designed for educational purposes. The following security considerations are intentionally simplified and can be improved in subsequent lessons:
